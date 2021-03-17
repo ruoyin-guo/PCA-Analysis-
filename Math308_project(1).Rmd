@@ -1,0 +1,104 @@
+---
+title: "Math 308 project"
+author: 
+- Yining Fan 260854538
+- Yining Wang 260844811
+- Ruoyin Guo 260829900
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+In this case study, we are going to perform PCA on the **Wisconsin Breast Cancer** dataset. 
+
+## Part a
+**Description of the variables and the source of data**
+
+The dataset consists of 699 instances (with 16 missing attribute values), obtained from the University of Wisconsin Hospitals, Madison from Dr. William H. Wolberg in 1991. For each instance, there are 11 features as follows:
+
+1. **Sample code number**: the ID number of the patient. 
+2. **Clump Thickness**: Determines whether the cells are mono-layered or multi-layered. 
+3. **Uniformity of Cell Size**: Measures the consistency in the size of cells. 
+4. **Uniformity of Cell Shape**: Estimates the equality of cell shapes and identifies marginal variances. 
+5. **Marginal Adhesion**: The loss of adhesion is a sign of malignancy. 
+6. **Single Epithelial Cell Size**: Relates to the uniformity. 
+7. **Bare Nuclei**: Terminology for nuclei without cytoplasm. 
+8. **Bland Chromatin**: Describes a uniform texture of the nucleus seen in benign cells. 
+9. **Normal Nucleoli**: The nucleoli tends to be much more prominent in cancer cells. 
+10. **Mitoses**: Describes the number of mitosis that has taken place. The chance of malignancy is higher with augmentation of this value. 
+11. **Class**: Diagnosis (2 = benign, 4 = malignant)
+
+```{r message=FALSE, echo=FALSE}
+library(tidyverse)
+library(GGally)
+library(psych)
+library(readr)
+```
+We import the data and handle the missing value as follows:
+```{r}
+cancer_dat <- read_csv("breast_cancer_wisconsin.csv")
+#Delete the missing values from the datset
+cancer_dat <- na.omit(cancer_dat)
+#Dimension of the dataset
+dim(cancer_dat)
+```
+
+## Part b
+**Key summary statistics**
+
+Before applying PCA on cancer dataset, notice that there are two categorical variables (**Sample code number** and **Class**) included in the data. Due to the fact that PCA only works with continuous features, those two attributes are excluded. Now we are left with a matrix of dimension 683 rows and 9 columns.
+```{r}
+#Scatterplot of all pairs of features
+pairs.panels(cancer_dat[,c(2:10)], pch = 21, stars = TRUE)
+```
+
+From this plot, we can see that in general the correlation between each pair of variables is pretty high,
+though some are not. 
+Thus, some variables might be redundant, and some are worth keeping them.
+
+Argue whether to scale the variables by computing basic statistics of the features
+```{r,echo=TRUE}
+#mean
+apply(cancer_dat[,c(2:10)], 2, mean)
+#variance
+apply(cancer_dat[,c(2:10)], 2, var)
+```
+Since the mean and variance do not have much difference and the features are all on the same scale (range from 1 to 10), we can reasonably argue that it is better not to scale the variables.
+
+## Part c
+**Perform PCA on the data and interpretation of the results** 
+```{r}
+#Perform PCA on un-standardized data
+cancer.pca <- prcomp(cancer_dat[,c(2:10)], scale=FALSE)
+summary(cancer.pca)
+```
+We can see that PC1 explains 69% of the total variance,
+which means that over two thirds of the information in the dataset can be encapsulated by just one Principal Component.
+PC2 only explains 7% and with PC1 together, they explain around 76% of the total variance.
+This means by knowing the position of instances in relation to just PC1 and PC2, we can get an accurate view on where it stands in relation to other instances.
+
+By plotting the proportion of variance explained by each principle component, as well as the cumulative principle component, we can get a clearer sense of the overall distribution.
+```{r}
+pr.var = cancer.pca$sdev ^2
+pve <- pr.var / sum(pr.var)
+
+par(mfrow = c(1,2))
+plot(pve, xlab = "Principal Component", ylab = "Prop of Variance Expained", 
+     type="b", col = "blue")
+plot(cumsum(pve), xlab = "Principal Component", ylab = "Cumulative Prop of Variance Expained", 
+     type="b", col = "red")
+```
+
+Plot the first two principal components within a biplot.
+```{r}
+biplot(cancer.pca, scale = 0, cex = c(0.5,0.5))
+```
+Notice that there is a lot of points gathering around in the right side of the graph as well as the lower left side. Thus this further shows that there is a lot variation in the first principal component.
+To further illustrate, there are a lot of points fall around the Clump Thickness, Marginal Adhesion, Bland Chromatin features and also there are even more points gathering in a condensed way in the opposite direction of these features. Thus those features worth some further study.
+
+## Reference
+Breast Cancer dataset: 
+https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)
