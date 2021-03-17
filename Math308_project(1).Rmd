@@ -1,9 +1,9 @@
 ---
-title: "Math 308 project"
+title: "PCA Analysis Exercise"
 author: 
-- Yining Fan 260854538
-- Yining Wang 260844811
-- Ruoyin Guo 260829900
+- Yining Fan
+- Yining Wang 
+- Ruoyin Guo 
 output:
   pdf_document: default
   html_document: default
